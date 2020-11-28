@@ -153,7 +153,7 @@ void init()
 
 	// 设置成灰色背景
 	float tmp = 0.5;
-	glClearColor(tmp, 0, 0, 1.0);
+	glClearColor(tmp, tmp, tmp, 1.0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ void display()
 	vec4 at = vec4(0, 0, 0, 0);
 	vec4 up = vec4(0, 1, 0, 0);
 
-	Camera::modelMatrix = mat4(1.0);
+	Camera::modelMatrix = mat4(1.); // 将球移到y轴上方
 	Camera::viewMatrix = Camera::lookAt(eye, at, up);
 	Camera::projMatrix = Camera::ortho(-3, 3, -3, 3, -3, 3);
 
@@ -230,14 +230,14 @@ void display()
 		0.0, 0.0, -ly, 0.0,
 		0.0, 0.0, 0.0, -ly);
 	// 阴影设置
-	//Camera::modelMatrix = Translate();
-	Camera::modelMatrix = shadowProjMatrix;
+	// 为了将投影面设为-1，需要先将物体向y方向移动一格，再投影，最后再向-y方向移动一格
+	Camera::modelMatrix = Translate(0, -1, 0) * shadowProjMatrix * Translate(0, 1, 0);
 
 	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, &Camera::viewMatrix[0][0]);
 	glUniformMatrix4fv(projMatrixID, 1, GL_TRUE, &Camera::projMatrix[0][0]);
 	glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, &Camera::modelMatrix[0][0]);
 
-	// 将系数传入片元着色器
+	// 将系数传入片元着色器，以便将影子设为黑色
 	coefficients = vec3(0, 0, 0);
 	glUniform3fv(coefficientsID, 1, &coefficients[0]);
 
