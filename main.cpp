@@ -25,8 +25,12 @@ GLuint vertexIndexBuffer;
 
 GLuint vPositionID;
 GLuint vNormalID;
-GLuint modelViewMatrixID;
-GLuint modelViewProjMatrixID;
+//GLuint modelViewMatrixID;
+//GLuint modelViewProjMatrixID;
+
+GLuint modelMatrixID;
+GLuint viewMatrixID;
+GLuint projMatrixID;
 
 GLuint lightPosID;
 
@@ -100,9 +104,11 @@ void init()
 	// 从顶点着色器和片元着色器中获取变量的位置
 	vPositionID = glGetAttribLocation(programID, "vPosition");
 	vNormalID = glGetAttribLocation(programID, "vNormal");
-	modelViewMatrixID = glGetUniformLocation(programID, "modelViewMatrix");
-	modelViewProjMatrixID = glGetUniformLocation(programID, "modelViewProjMatrix");
 	lightPosID = glGetUniformLocation(programID, "lightPos");
+
+	modelMatrixID = glGetUniformLocation(programID, "modelMatrix");
+	viewMatrixID = glGetUniformLocation(programID, "viewMatrix");
+	projMatrixID = glGetUniformLocation(programID, "projMatrix");
 
 	// 读取外部三维模型
 	mesh->read_off("sphere.off");
@@ -160,13 +166,9 @@ void display()
 	Camera::projMatrix = Camera::ortho(-1, 1, -1, 1, -1, 1);
 
 
-	// TODO 计算相机观察矩阵和投影矩阵，并传入顶点着色器
-	mat4 modelViewMatrix = Camera::viewMatrix * Camera::modelMatrix;
-	mat4 modelViewProjMatrix = Camera::projMatrix * modelViewMatrix;
-
-
-	glUniformMatrix4fv(modelViewMatrixID, 1, GL_TRUE, &modelViewMatrix[0][0]);
-	glUniformMatrix4fv(modelViewProjMatrixID, 1, GL_TRUE, &modelViewProjMatrix[0][0]);
+	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, &Camera::viewMatrix[0][0]);
+	glUniformMatrix4fv(projMatrixID, 1, GL_TRUE, &Camera::projMatrix[0][0]);
+	glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, &Camera::modelMatrix[0][0]);
 
 
 	// 将光源位置传入顶点着色器
@@ -203,35 +205,28 @@ void display()
 		(void*)0
 	);
 
-	// 绘制阴影部分
-	float lx = lightPos[0];
-	float ly = lightPos[1];
-	float lz = lightPos[2];
+	//// 绘制阴影部分
+	//float lx = lightPos[0];
+	//float ly = lightPos[1];
+	//float lz = lightPos[2];
 
-	mat4 shadowProjMatrix(-ly, 0.0, 0.0, 0.0,
-		lx, 0.0, lz, 1.0,
-		0.0, 0.0, -ly, 0.0,
-		0.0, 0.0, 0.0, -ly);
-	// 投影设置
-	Camera::modelMatrix = shadowProjMatrix;
-	Camera::viewMatrix = Camera::lookAt(vec4(0, 0, 1, 1), vec4(0, 0, 0, 1), vec4(0, 1, 0, 0));
-	Camera::projMatrix = Camera::ortho(-1, 1, -1, 1, -1, 1);
+	//mat4 shadowProjMatrix(-ly, 0.0, 0.0, 0.0,
+	//	lx, 0.0, lz, 1.0,
+	//	0.0, 0.0, -ly, 0.0,
+	//	0.0, 0.0, 0.0, -ly);
+	//// 阴影设置
+	//Camera::modelMatrix = shadowProjMatrix;
 
+	//glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, &Camera::viewMatrix[0][0]);
+	//glUniformMatrix4fv(projMatrixID, 1, GL_TRUE, &Camera::projMatrix[0][0]);
+	//glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, &Camera::modelMatrix[0][0]);
 
-	// TODO 计算相机观察矩阵和投影矩阵，并传入顶点着色器
-	modelViewMatrix = Camera::viewMatrix * Camera::modelMatrix;
-	modelViewProjMatrix = Camera::projMatrix * modelViewMatrix;
-
-
-	glUniformMatrix4fv(modelViewMatrixID, 1, GL_TRUE, &modelViewMatrix[0][0]);
-	glUniformMatrix4fv(modelViewProjMatrixID, 1, GL_TRUE, &modelViewProjMatrix[0][0]);
-
-	glDrawElements(
-		GL_TRIANGLES,
-		int(mesh->f().size() * 3),
-		GL_UNSIGNED_INT,
-		(void*)0
-	);
+	//glDrawElements(
+	//	GL_TRIANGLES,
+	//	int(mesh->f().size() * 3),
+	//	GL_UNSIGNED_INT,
+	//	(void*)0
+	//);
 
 	// 结束部分
 	glDisableVertexAttribArray(vPositionID);
@@ -258,11 +253,10 @@ void idle(void)
 
 void mouse(int x, int y)
 {
-	lightPos[0] = (x - 250) / 250.0;
-	lightPos[1] = (250 - y) / 250.0;
+	lightPos[0] = (x - 250) / 25.0;
+	lightPos[1] = (250 - y) / 25.0;
 	glutIdleFunc(idle);
 	return;
-	// TODO 用鼠标控制光源的位置，并实时更新光照效果
 }
 
 //////////////////////////////////////////////////////////////////////////
