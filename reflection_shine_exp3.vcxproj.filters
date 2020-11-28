@@ -30,6 +30,9 @@
     <None Include="sphere_coarse.off">
       <Filter>源文件</Filter>
     </None>
+    <None Include="readme.md">
+      <Filter>源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="InitShader.cpp">

@@ -142,6 +142,7 @@
   <ItemGroup>
     <None Include="cube.off" />
     <None Include="fshader_frag.glsl" />
+    <None Include="readme.md" />
     <None Include="sphere.off" />
     <None Include="sphere_coarse.off" />
     <None Include="vshader_frag.glsl" />
