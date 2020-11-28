@@ -11,9 +11,12 @@ void main()
 {
     
 	// TODO 设置三维物体的材质属性
-	vec3 ambiColor = vec3(0.2, 0.2, 0.2);
-	vec3 diffColor = vec3(0.5, 0.5, 0.5);
-	vec3 specColor = vec3(0.3, 0.3, 0.3);
+	float _tmp = 0.4;
+	vec3 ambiColor = vec3(_tmp, _tmp, _tmp);
+	_tmp = 0.6;
+	vec3 diffColor = vec3(_tmp, _tmp, _tmp);
+	_tmp = 1.0;
+	vec3 specColor = vec3(_tmp, _tmp, _tmp);
 
 	// TODO 计算N，L，V，R四个向量并归一化
 	// vec3 N_norm = ...;
@@ -41,9 +44,12 @@ void main()
 				   // diffColor * lambertian +
 				   // specColor * pow(specular, 5.0), 1.0);
 	// fragmentColor = vec4(specColor * pow(specular, 5.0), 1.0);
-	vec4 ambient = vec4(ambiColor, 1.0);
-	vec4 diffuse = vec4(diffColor * lambertian, 1.0);
-	vec4 spec = vec4(specColor * pow(specular, shininess), 1.0);
+	_tmp = 1.0;
+	vec4 ambient = vec4(_tmp * ambiColor, 1.0);
+	_tmp = 1.0;
+	vec4 diffuse = vec4(_tmp * diffColor * lambertian, 1.0);
+	_tmp = 0.5;
+	vec4 spec = vec4(_tmp * specColor * pow(specular, shininess), 1.0);
 	fragmentColor = ambient + diffuse + spec;
 
 }

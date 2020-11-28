@@ -141,7 +141,7 @@ void init()
 	glDepthFunc(GL_LESS);
 
 	// …Ë÷√≥…ª“…´±≥æ∞
-	float tmp = 0.6;
+	float tmp = 0.5;
 	glClearColor(tmp, tmp, tmp, 1.0);
 }
 
