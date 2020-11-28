@@ -4,6 +4,7 @@ in vec3 N;
 in vec3 V;
 
 uniform vec3 lightPos;
+uniform vec3 coefficients;
 
 out vec4 fragmentColor;
 
@@ -44,11 +45,11 @@ void main()
 				   // diffColor * lambertian +
 				   // specColor * pow(specular, 5.0), 1.0);
 	// fragmentColor = vec4(specColor * pow(specular, 5.0), 1.0);
-	_tmp = 1.0;
+	_tmp = coefficients[0];
 	vec4 ambient = vec4(_tmp * ambiColor, 1.0);
-	_tmp = 1.0;
+	_tmp = coefficients[1];
 	vec4 diffuse = vec4(_tmp * diffColor * lambertian, 1.0);
-	_tmp = 0.5;
+	_tmp = coefficients[2];
 	vec4 spec = vec4(_tmp * specColor * pow(specular, shininess), 1.0);
 	fragmentColor = ambient + diffuse + spec;
 

@@ -25,13 +25,12 @@ GLuint vertexIndexBuffer;
 
 GLuint vPositionID;
 GLuint vNormalID;
-//GLuint modelViewMatrixID;
-//GLuint modelViewProjMatrixID;
 
 GLuint modelMatrixID;
 GLuint viewMatrixID;
 GLuint projMatrixID;
 
+GLuint coefficientsID;
 GLuint lightPosID;
 
 TriMesh* mesh = new TriMesh();
@@ -39,6 +38,11 @@ vec3 lightPos(0.0, 0.0, 2.0);
 
 //////////////////////////////////////////////////////////////////////////
 // 相机参数设置
+
+// 相机参数
+double Delta = M_PI / 2.0;
+double Theta = M_PI / 2.0;
+double R = 1.0;
 
 namespace Camera
 {
@@ -109,6 +113,7 @@ void init()
 	modelMatrixID = glGetUniformLocation(programID, "modelMatrix");
 	viewMatrixID = glGetUniformLocation(programID, "viewMatrix");
 	projMatrixID = glGetUniformLocation(programID, "projMatrix");
+	coefficientsID = glGetUniformLocation(programID, "coefficients");
 
 	// 读取外部三维模型
 	mesh->read_off("sphere.off");
@@ -161,9 +166,15 @@ void display()
 	glUseProgram(programID);
 
 	//默认设置
+	// TODO 设置相机参数
+
+	vec4 eye = vec4(R * sin(Delta) * cos(Theta), R * cos(Delta), R * sin(Delta) * sin(Theta), 0);
+	vec4 at = vec4(0, 0, 0, 0);
+	vec4 up = vec4(0, 1, 0, 0);
+
 	Camera::modelMatrix = mat4(1.0);
-	Camera::viewMatrix = Camera::lookAt(vec4(0, 0, 1, 1), vec4(0, 0, 0, 1), vec4(0, 1, 0, 0));
-	Camera::projMatrix = Camera::ortho(-1, 1, -1, 1, -1, 1);
+	Camera::viewMatrix = Camera::lookAt(eye, at, up);
+	Camera::projMatrix = Camera::ortho(-3, 3, -3, 3, -3, 3);
 
 
 	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, &Camera::viewMatrix[0][0]);
@@ -173,6 +184,10 @@ void display()
 
 	// 将光源位置传入顶点着色器
 	glUniform3fv(lightPosID, 1, &lightPos[0]);
+	// 将系数传入片元着色器
+	vec3 coefficients(1.0, 1.0, 0.5);
+	glUniform3fv(coefficientsID, 1, &coefficients[0]);
+
 
 	glEnableVertexAttribArray(vPositionID);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
@@ -205,28 +220,33 @@ void display()
 		(void*)0
 	);
 
-	//// 绘制阴影部分
-	//float lx = lightPos[0];
-	//float ly = lightPos[1];
-	//float lz = lightPos[2];
+	// 绘制阴影部分
+	float lx = lightPos[0];
+	float ly = lightPos[1];
+	float lz = lightPos[2];
 
-	//mat4 shadowProjMatrix(-ly, 0.0, 0.0, 0.0,
-	//	lx, 0.0, lz, 1.0,
-	//	0.0, 0.0, -ly, 0.0,
-	//	0.0, 0.0, 0.0, -ly);
-	//// 阴影设置
-	//Camera::modelMatrix = shadowProjMatrix;
+	mat4 shadowProjMatrix(-ly, 0.0, 0.0, 0.0,
+		lx, 0.0, lz, 1.0,
+		0.0, 0.0, -ly, 0.0,
+		0.0, 0.0, 0.0, -ly);
+	// 阴影设置
+	//Camera::modelMatrix = Translate();
+	Camera::modelMatrix = shadowProjMatrix;
 
-	//glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, &Camera::viewMatrix[0][0]);
-	//glUniformMatrix4fv(projMatrixID, 1, GL_TRUE, &Camera::projMatrix[0][0]);
-	//glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, &Camera::modelMatrix[0][0]);
+	glUniformMatrix4fv(viewMatrixID, 1, GL_TRUE, &Camera::viewMatrix[0][0]);
+	glUniformMatrix4fv(projMatrixID, 1, GL_TRUE, &Camera::projMatrix[0][0]);
+	glUniformMatrix4fv(modelMatrixID, 1, GL_TRUE, &Camera::modelMatrix[0][0]);
 
-	//glDrawElements(
-	//	GL_TRIANGLES,
-	//	int(mesh->f().size() * 3),
-	//	GL_UNSIGNED_INT,
-	//	(void*)0
-	//);
+	// 将系数传入片元着色器
+	coefficients = vec3(0, 0, 0);
+	glUniform3fv(coefficientsID, 1, &coefficients[0]);
+
+	glDrawElements(
+		GL_TRIANGLES,
+		int(mesh->f().size() * 3),
+		GL_UNSIGNED_INT,
+		(void*)0
+	);
 
 	// 结束部分
 	glDisableVertexAttribArray(vPositionID);
@@ -262,6 +282,17 @@ void mouse(int x, int y)
 //////////////////////////////////////////////////////////////////////////
 // 键盘响应函数
 
+// 更新Delta
+void updateDelta(int sign, double step) {
+	Delta += sign * step;
+
+}
+
+// 更新Theta
+void updateTheta(int sign, double step) {
+	Theta += sign * step;
+}
+
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -271,6 +302,29 @@ void keyboard(unsigned char key, int x, int y)
 		break;
 	case 'q':
 		exit(EXIT_SUCCESS);
+		break;
+		// Todo：键盘控制相机的位置和朝向
+		// w, s --> R距离
+		// e, d --> Delta
+		// r, f --> Theta
+	case 'w':
+		R += 0.1;
+		break;
+	case 's':
+		R -= 0.1;
+		break;
+	case 'e':
+		updateDelta(1, 0.1);
+		break;
+	case 'd':
+		updateDelta(-1, 0.1);
+		break;
+	case 'r':
+		updateTheta(1, 0.1);
+		// 周期为2 * M_PI
+		break;
+	case 'f':
+		updateTheta(-1, 0.1);
 		break;
 	}
 	glutPostRedisplay();
