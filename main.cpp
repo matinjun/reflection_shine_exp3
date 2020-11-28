@@ -142,7 +142,7 @@ void init()
 
 	// 设置成灰色背景
 	float tmp = 0.5;
-	glClearColor(tmp, tmp, tmp, 1.0);
+	glClearColor(tmp, 0, 0, 1.0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -161,14 +161,10 @@ void display()
 
 
 	// TODO 计算相机观察矩阵和投影矩阵，并传入顶点着色器
-	// mat4 modelViewMatrix = ...;  //连乘
-	// mat4 modelViewProjMatrix = ...; //连乘
 	mat4 modelViewMatrix = Camera::viewMatrix * Camera::modelMatrix;
 	mat4 modelViewProjMatrix = Camera::projMatrix * modelViewMatrix;
 
 
-	// glUniformMatrix4fv(modelViewMatrixID, 1, GL_TRUE, ...);
-	// glUniformMatrix4fv(modelViewProjMatrixID, 1, GL_TRUE, ...);
 	glUniformMatrix4fv(modelViewMatrixID, 1, GL_TRUE, &modelViewMatrix[0][0]);
 	glUniformMatrix4fv(modelViewProjMatrixID, 1, GL_TRUE, &modelViewProjMatrix[0][0]);
 
@@ -207,6 +203,37 @@ void display()
 		(void*)0
 	);
 
+	// 绘制阴影部分
+	float lx = lightPos[0];
+	float ly = lightPos[1];
+	float lz = lightPos[2];
+
+	mat4 shadowProjMatrix(-ly, 0.0, 0.0, 0.0,
+		lx, 0.0, lz, 1.0,
+		0.0, 0.0, -ly, 0.0,
+		0.0, 0.0, 0.0, -ly);
+	// 投影设置
+	Camera::modelMatrix = shadowProjMatrix;
+	Camera::viewMatrix = Camera::lookAt(vec4(0, 0, 1, 1), vec4(0, 0, 0, 1), vec4(0, 1, 0, 0));
+	Camera::projMatrix = Camera::ortho(-1, 1, -1, 1, -1, 1);
+
+
+	// TODO 计算相机观察矩阵和投影矩阵，并传入顶点着色器
+	modelViewMatrix = Camera::viewMatrix * Camera::modelMatrix;
+	modelViewProjMatrix = Camera::projMatrix * modelViewMatrix;
+
+
+	glUniformMatrix4fv(modelViewMatrixID, 1, GL_TRUE, &modelViewMatrix[0][0]);
+	glUniformMatrix4fv(modelViewProjMatrixID, 1, GL_TRUE, &modelViewProjMatrix[0][0]);
+
+	glDrawElements(
+		GL_TRIANGLES,
+		int(mesh->f().size() * 3),
+		GL_UNSIGNED_INT,
+		(void*)0
+	);
+
+	// 结束部分
 	glDisableVertexAttribArray(vPositionID);
 	glUseProgram(0);
 

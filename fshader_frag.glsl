@@ -11,7 +11,7 @@ void main()
 {
     
 	// TODO 设置三维物体的材质属性
-	float _tmp = 0.4;
+	float _tmp = 0.3;
 	vec3 ambiColor = vec3(_tmp, _tmp, _tmp);
 	_tmp = 0.6;
 	vec3 diffColor = vec3(_tmp, _tmp, _tmp);
