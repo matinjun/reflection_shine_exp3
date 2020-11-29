@@ -116,7 +116,7 @@ void init()
 	coefficientsID = glGetUniformLocation(programID, "coefficients");
 
 	// 读取外部三维模型
-	mesh->read_off("sphere.off");
+	mesh->read_off("cube.off");
 
 	vector<vec3f> vs = mesh->v();
 	vector<vec3i> fs = mesh->f();
