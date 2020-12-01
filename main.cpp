@@ -35,6 +35,41 @@ GLuint lightPosID;
 
 TriMesh* mesh = new TriMesh();
 vec3 lightPos(0.0, 0.0, 2.0);
+//////////////////////////////////////////////////////////////////////////
+// 平面设置
+class Plane {
+public:
+	vector<vec3f> vertices;
+	vector<vec3f> vnormals;
+	vector<vec3i> index;
+
+	Plane(GLfloat y = -1., GLfloat size = 1.0) {
+		// 初始化平面
+		vertices.push_back(vec3f(-size, y, -size));
+		vertices.push_back(vec3f(-size, y, size));
+		vertices.push_back(vec3f(size, y, size));
+		vertices.push_back(vec3f(size, y, -size));
+
+
+		// 索引
+		index.push_back(vec3i(0, 1, 3));
+		index.push_back(vec3i(2, 1, 3));
+
+		// 法向量
+		vnormals.push_back(vec3f(0, 1, 0));
+		vnormals.push_back(vec3f(0, 1, 0));
+		vnormals.push_back(vec3f(0, 1, 0));
+		vnormals.push_back(vec3f(0, 1, 0));
+	}
+	void add_index(int step) {
+		for (int i = 0; i < index.size(); ++i) {
+			index[i].a += step;
+			index[i].b += step;
+			index[i].c += step;
+		}
+	}
+};
+//////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 // 相机参数设置
@@ -98,6 +133,7 @@ namespace Camera
 
 //////////////////////////////////////////////////////////////////////////
 // OpenGL 初始化
+Plane plane(-1, 3);
 
 void init()
 {
@@ -116,7 +152,7 @@ void init()
 	coefficientsID = glGetUniformLocation(programID, "coefficients");
 
 	// 读取外部三维模型
-	mesh->read_off("cube.off");
+	mesh->read_off("sphere.off");
 
 	vector<vec3f> vs = mesh->v();
 	vector<vec3i> fs = mesh->f();
@@ -126,6 +162,11 @@ void init()
 	for (int i = 0; i < vs.size(); ++i) {
 		ns.push_back(vs[i] - vec3(0.0, 0.0, 0.0));
 	}
+	// 把平面追加到vs, fs, ns数组中
+	plane.add_index(vs.size());
+	vs.insert(vs.end(), plane.vertices.begin(), plane.vertices.end());
+	fs.insert(fs.end(), plane.index.begin(), plane.index.end());
+	ns.insert(ns.end(), plane.vnormals.begin(), plane.vnormals.end());
 
 	// 生成VAO
 	glGenVertexArrays(1, &vertexArrayID);
@@ -215,9 +256,19 @@ void display()
 
 	glDrawElements(
 		GL_TRIANGLES,
-		int(mesh->f().size() * 3),
+		int((mesh->f().size()) * 3),
 		GL_UNSIGNED_INT,
 		(void*)0
+	);
+	// 绘制平面
+	coefficients = vec3(1., 1., 1.);
+	glUniform3fv(coefficientsID, 1, &coefficients[0]);
+
+	glDrawElements(
+		GL_TRIANGLES,
+		int(2 * 3),
+		GL_UNSIGNED_INT,
+		(void *)(mesh->f().size() * 3)
 	);
 
 	// 绘制阴影部分
