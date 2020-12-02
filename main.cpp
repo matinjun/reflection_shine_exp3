@@ -132,7 +132,7 @@ namespace Camera
 }
 
 //////////////////////////////////////////////////////////////////////////
-// OpenGL 初始化
+// OpenGL 初始化在y = -1的平面
 Plane plane(-1, 3);
 
 void init()
@@ -261,8 +261,16 @@ void display()
 		(void*)0
 	);
 	// 绘制平面
+	// 此处不能显示平面而如果见下面的代码换成
+	// glDrawElements(
+	// 	GL_TRIANGLES,
+	// 	int((mesh->f().size()) * 3 + 6),
+	// 	GL_UNSIGNED_INT,
+	// 	(void*)0
+	// );
+	// 就可以正常显示平面，只不过颜色不是很理想
 	coefficients = vec3(1., 1., 1.);
-	glUniform3fv(coefficientsID, 1, &coefficients[0]);
+	glUniform3fv(coefficientsID, 1, &coefficients[0]); // 通过coefficents控制三种光的的系数，以便在绘制平面时去掉漫反射，镜面反射的影响
 
 	glDrawElements(
 		GL_TRIANGLES,
@@ -270,6 +278,7 @@ void display()
 		GL_UNSIGNED_INT,
 		(void *)(mesh->f().size() * 3)
 	);
+
 
 	// 绘制阴影部分
 	float lx = lightPos[0];
